@@ -1,0 +1,8 @@
+{
+  "name": "DevPort - Senior Software Developer Portfolio",
+  "description": "A high-end, single-page professional portfolio for a freelance software developer featuring AI-enhanced contact inquiries using Gemini.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
