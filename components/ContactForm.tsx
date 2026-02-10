@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { GeminiService } from '../services/geminiService';
 import { ContactFormData } from '../types';
 
 const SERVICES_OPTIONS = [
@@ -32,7 +31,6 @@ const ContactForm: React.FC = () => {
     message: '' 
   });
   const [loading, setLoading] = useState(false);
-  const [aiFeedback, setAiFeedback] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
   const toggleService = (service: string) => {
@@ -49,14 +47,9 @@ const ContactForm: React.FC = () => {
     if (!formData.name || !formData.message) return;
 
     setLoading(true);
-    console.log("Starting submission to:", WEBHOOK_URL);
     
     try {
-      // 1. Get AI feedback for UI engagement
-      const gemini = GeminiService.getInstance();
-      const aiFeedbackPromise = gemini.analyzeInquiry(formData.message);
-
-      // 2. Prepare payload
+      // 1. Prepare payload
       const servicesString = formData.services.length > 0 
         ? formData.services.join(', ') 
         : 'None specified';
@@ -70,9 +63,7 @@ const ContactForm: React.FC = () => {
         timestamp: new Date().toLocaleString()
       };
 
-      // 3. Send to Google Sheets Webhook
-      // Using 'text/plain' to avoid CORS preflight (OPTIONS) request.
-      // mode: 'no-cors' allows the request to be sent even if the redirect fails to return CORS headers.
+      // 2. Send to Google Sheets Webhook (Silent background log)
       const webhookPromise = fetch(WEBHOOK_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -80,24 +71,22 @@ const ContactForm: React.FC = () => {
           'Content-Type': 'text/plain;charset=utf-8',
         },
         body: JSON.stringify(payload),
-      }).then(() => console.log("Webhook request dispatched successfully."));
+      });
 
-      // 4. Construct WhatsApp Message
+      // 3. Construct WhatsApp Message for manual follow-up
       const whatsappMsg = `NEW INQUIRY\nName: ${formData.name}\nEmail: ${emailStr}\nServices: ${servicesString}\nMessage: ${formData.message}`;
       const encodedMsg = encodeURIComponent(whatsappMsg);
       const whatsappUrl = `https://wa.me/60169849384?text=${encodedMsg}`;
 
-      // Wait for AI feedback (and webhook dispatch)
-      const [feedback] = await Promise.all([aiFeedbackPromise, webhookPromise]);
-      setAiFeedback(feedback);
+      // Wait briefly for dispatch
+      await webhookPromise;
 
-      // 5. Open WhatsApp in a new tab
+      // 4. Open WhatsApp in a new tab
       window.open(whatsappUrl, '_blank');
 
       setSubmitted(true);
     } catch (error) {
       console.error('Submission error:', error);
-      setAiFeedback("I've received your inquiry! I'll be in touch very soon.");
       setSubmitted(true);
     } finally {
       setLoading(false);
@@ -113,19 +102,19 @@ const ContactForm: React.FC = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-3xl font-bold text-white mb-4">Inquiry Logged!</h2>
+          <h2 className="text-3xl font-bold text-white mb-4">Message Sent!</h2>
           <p className="text-slate-400 mb-8 leading-relaxed">
-            Thank you, {formData.name}. Your details have been sent to my pipeline. <br/>
-            WhatsApp should have opened for us to chat immediately.
+            Thank you, {formData.name}. Your inquiry has been logged in my pipeline. <br/>
+            I will review your requirements and reach out via WhatsApp/Email within 24 hours.
           </p>
-          <div className="p-6 rounded-xl bg-purple-500/10 border border-purple-500/20 italic text-purple-300 mb-10 text-lg">
-            "{aiFeedback}"
+          <div className="p-6 rounded-xl bg-slate-800 border border-white/5 italic text-slate-300 mb-10">
+            "Looking forward to exploring how we can build your project together."
           </div>
           <button 
             onClick={() => setSubmitted(false)}
             className="text-slate-400 hover:text-white transition-colors underline text-sm"
           >
-            Back to Form
+            Send another inquiry
           </button>
         </div>
       </section>
@@ -256,13 +245,7 @@ const ContactForm: React.FC = () => {
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
-              <span>Secure Log & WhatsApp Redirect Enabled</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <span>AI-Enhanced Engagement Active</span>
+              <span>Automated Pipeline Logging Enabled</span>
             </div>
           </div>
         </form>

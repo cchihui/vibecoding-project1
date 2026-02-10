@@ -1,12 +1,11 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Services from './components/Services';
 import Projects from './components/Projects';
 import ContactForm from './components/ContactForm';
 import Footer from './components/Footer';
-import AIChatWidget from './components/AIChatWidget';
 
 const App: React.FC = () => {
   return (
@@ -21,9 +20,6 @@ const App: React.FC = () => {
       </main>
 
       <Footer />
-      
-      {/* Interactive AI Widget to showcase Gemini expertise */}
-      <AIChatWidget />
       
       {/* Background blobs for aesthetic depth */}
       <div className="fixed top-0 -left-10 w-72 h-72 bg-purple-500/10 rounded-full blur-[120px] pointer-events-none -z-10" />
